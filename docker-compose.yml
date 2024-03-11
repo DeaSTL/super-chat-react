@@ -1,0 +1,26 @@
+version: "3"
+
+
+services:
+  server:
+    build: ./server/
+    network_mode: "host"
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./server
+          target: /app
+  frontend:
+    build: ./frontend/
+    network_mode: "host"
+    depends_on: 
+      - server
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+
+
+
+
