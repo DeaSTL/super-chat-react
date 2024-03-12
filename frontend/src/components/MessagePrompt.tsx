@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, FormControl, InputGroup } from 'react-bootstrap'
+import { Button, FormControl, FormText, InputGroup } from 'react-bootstrap'
 
 
 interface IMessagePrompt {
@@ -9,6 +9,8 @@ interface IMessagePrompt {
 export default function MessagePrompt(props:IMessagePrompt) {
 
   const [input, setInput] = useState("")
+
+  const maxlength = 500
   
 
   const submitInput = () => {
@@ -25,10 +27,19 @@ export default function MessagePrompt(props:IMessagePrompt) {
 
   return (
     <>
-      <InputGroup className="mt-4">
+      <FormText>
+      {input.length} / {maxlength}
+      </FormText>
+      <InputGroup>
         <FormControl
         value={input}
-        onChange={e => {setInput(e.target.value)}}
+        onChange={
+          e => { 
+            if(e.target.value.length - 1 < maxlength){
+              setInput(e.target.value)
+            }
+          }
+        }
         type="text" onKeyDown={keyPressed}/>
         <Button onClick={submitInput}>Send</Button>
       </InputGroup>

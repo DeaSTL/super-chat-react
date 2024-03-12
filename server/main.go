@@ -48,10 +48,15 @@ type UserData struct {
 	UserID string `json:"user_id"`
 }
 
+type PublicUserData struct {
+	Username string `json:"username"`
+}
+
 type ConnectionContext struct {
 	AllClients *[]*ConnectionContext
 	Client     *websocket.Conn
 	RoomID     string
+	Username   string
 	SessionID  string
 	Closed     bool
 }
@@ -62,6 +67,22 @@ func (ctx *ConnectionContext) LogConnections() {
 	}
 }
 
+func (ctx *ConnectionContext) GetAllPublicUsers() []PublicUserData {
+	user_data := []PublicUserData{}
+
+	for _, conn := range *ctx.AllClients {
+		user_data = append(user_data, conn.GetPublicData())
+	}
+
+	return user_data
+}
+
+func (ctx *ConnectionContext) GetPublicData() PublicUserData {
+	return PublicUserData{
+		Username: ctx.Username,
+	}
+}
+
 func (ctx *ConnectionContext) New(connections *[]*ConnectionContext, client *websocket.Conn) {
 	ctx.AllClients = connections
 	ctx.Client = client
@@ -69,28 +90,39 @@ func (ctx *ConnectionContext) New(connections *[]*ConnectionContext, client *web
 	ctx.SessionID = GenB64(32)
 }
 
-func (ctx *ConnectionContext) broadcastMessage(message *Message) {
+func (ctx *ConnectionContext) broadcastMessage(message any, event string) error {
 	for _, conn := range *ctx.AllClients {
-		err := conn.Client.WriteJSON(message)
-
-		log.Printf("Broadcasting message: %v to: %v", message, ctx.SessionID)
+		err := conn.sendMessage(message, event)
 
 		if err != nil {
-			log.Printf("Error broadcasting message : %v", err)
+			log.Printf("Error broadcasting: %v", err)
 		}
+
+		log.Printf("Broadcasting message: %v to: %v", message, ctx.SessionID)
 	}
+	return nil
 }
 
-func (ctx *ConnectionContext) sendMessage(message *Message) error {
-	log.Printf("Sending new socket message : %+v ", message)
-	message_str, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("Error marshalling message: %v", err)
+func (ctx *ConnectionContext) sendMessage(message any, event string) error {
+
+	new_message := Message{
+		Type: event,
 	}
-	err = ctx.Client.WriteMessage(1, message_str)
+	json_data, err := json.Marshal(message)
+
+	new_message.Data = json_data
+
 	if err != nil {
-		return fmt.Errorf("Error sending message: %v ", err)
+		return fmt.Errorf("Could not marshall json in broadcasst err: %v ", err)
 	}
+
+	err = ctx.Client.WriteJSON(new_message)
+
+	if err != nil {
+		return fmt.Errorf("Could not send json in broadcasst err: %v ", err)
+	}
+
+	log.Printf("Broadcasting message: %v to: %v", message, ctx.SessionID)
 	return nil
 }
 
@@ -98,42 +130,49 @@ func (ctx *ConnectionContext) messageHandler(message *Message) error {
 	switch message.Type {
 	// echos message to all connected users
 	case "user_message":
-		message_data := UserMessage{}
-		err := json.Unmarshal(message.Data, &message_data)
-		if err != nil {
-			return err
-		}
 
-		new_message := message_data
+		new_message := UserMessage{}
+
+		err := json.Unmarshal(message.Data, &new_message)
+
 		new_message.UserID = ctx.SessionID
 
-		message.Data, err = json.Marshal(new_message)
+		if err != nil {
+			return fmt.Errorf("Couldn't unmarshall message: %v", err)
+		}
 
-		ctx.broadcastMessage(message)
-		log.Printf("Recieved message: %+v from session:%+v", message_data, ctx)
+		ctx.broadcastMessage(new_message, "user_message")
+		break
 	case "get_user":
 		user_data := UserData{
 			UserID: ctx.SessionID,
 		}
-		json_data, err := json.Marshal(user_data)
+		ctx.sendMessage(user_data, "user_data")
+		break
+	case "set_username":
+		new_username := ""
+		err := json.Unmarshal(message.Data, &new_username)
+		if err != nil {
+			return fmt.Errorf("Error setting username: %v", err)
+		}
+		ctx.Username = new_username
 
-		message.Data = json_data
+		log.Printf("Username: %v", ctx.Username)
 
-		message.Type = "user_data"
+		public_users := ctx.GetAllPublicUsers()
 
-		log.Printf("%+v", user_data)
+		err = ctx.broadcastMessage(public_users, "update_user_list")
 
 		if err != nil {
 			return err
 		}
-
-		ctx.sendMessage(message)
+		break
 	}
 	return nil
 }
 
-func newMessageListener(ctx ConnectionContext) {
-	go func(ctx ConnectionContext) {
+func newMessageListener(ctx *ConnectionContext) {
+	go func(ctx *ConnectionContext) {
 		for {
 			message := Message{}
 			err := ctx.Client.ReadJSON(&message)
@@ -187,6 +226,14 @@ func newCloseHandler(ctx *ConnectionContext) func(int, string) error {
 		log.Printf("New Connection List")
 		ctx.LogConnections()
 
+		all_public_data := ctx.GetAllPublicUsers()
+
+		err := ctx.broadcastMessage(all_public_data, "update_user_list")
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
@@ -212,7 +259,16 @@ func handleNewConnection(connections *[]*ConnectionContext) func(http.ResponseWr
 		log.Printf("New connection: %v", new_ctx)
 		new_ctx.LogConnections()
 
-		newMessageListener(new_ctx)
+		all_public_data := new_ctx.GetAllPublicUsers()
+
+		log.Printf("Public data: %+v", all_public_data)
+
+		err = new_ctx.broadcastMessage(all_public_data, "update_user_list")
+
+		if err != nil {
+			log.Printf("Could not send update: %v", err)
+		}
+		newMessageListener(&new_ctx)
 	}
 }
 
@@ -224,5 +280,9 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/", corsMiddleware(http.HandlerFunc(handleNewConnection(&connections))))
+	mux.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("good"))
+	}))
 	http.ListenAndServe("0.0.0.0:8080", mux)
 }

@@ -4,6 +4,8 @@ import './App.css'
 import ChatWindow from './components/ChatWindow'
 import MessagePrompt from './components/MessagePrompt'
 import { Card } from 'react-bootstrap'
+import GreetingCard from './components/GreetingCard'
+import OnlineUsersPanel from './components/OnlineUsersPanel'
 
 type Message = {
   type: string;
@@ -20,7 +22,10 @@ function App() {
   const [messages, setMessages] = useState<UserMessage[]>([])
 
   const [user, setUser] = useState<UserData | null>(null)
+    
+  const [username, setUsername] = useState("")
 
+  const [users, setUsers] = useState<UserData[]>([])
   const [ws,setWs] = useState<WebSocket | null>(null)
 
 
@@ -41,7 +46,7 @@ function App() {
 
     let new_user_message:UserMessage = {
       content: message,
-      name: "some username"
+      name: username ?? "anon"
     }
 
     sendSocketMessage(new_user_message,"user_message")
@@ -50,10 +55,17 @@ function App() {
   useEffect(()=>{
       sendSocketMessage({},"get_user")
   },[ws])
+
+  useEffect(() => {
+    sendSocketMessage(username,"set_username")
+  }, [username])
   
   useEffect(()=>{
 
-    const hostname:string = document.location.hostname
+    //const hostname:string = "a634903d1a4b94f9cbae1ca502b27bf5-1875044850.us-east-2.elb.amazonaws.com"
+
+    const hostname:string = "localhost"
+
 
     const socket = new WebSocket(`ws://${hostname}:8080`)
 
@@ -76,6 +88,10 @@ function App() {
           let user_data: UserData = socket_message.data
           setUser(user_data)
           return
+        case "update_user_list": 
+          let users: UserData[] = socket_message.data
+          setUsers(users)
+          return
         default:
           return
       }
@@ -93,9 +109,14 @@ function App() {
 
   return (
     <div className="container-fluid mt-4">
-      <div className="row">
+      <GreetingCard setUsername={setUsername} show={username == ""}/>
+      <div className="row align-items-start">
+        <div className="col-2">
+          <OnlineUsersPanel users={users}/>
+        </div>
         <div className="col-md">
           <Card className="p-4">
+            <span>Username: <strong>{username}</strong></span>
             <ChatWindow user={user} messages={messages}/>
             <MessagePrompt sendUserMessage={sendUserMessage}/>
           </Card>
