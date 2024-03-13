@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Button, FormControl, FormText, InputGroup } from 'react-bootstrap'
 
 
 interface IMessagePrompt {
@@ -27,11 +26,12 @@ export default function MessagePrompt(props:IMessagePrompt) {
 
   return (
     <>
-      <FormText>
+      <p className="text-gray-300 pl-2">
       {input.length} / {maxlength}
-      </FormText>
-      <InputGroup>
-        <FormControl
+      </p>
+      <div className="flex">
+        <input
+        className=""
         value={input}
         onChange={
           e => { 
@@ -41,8 +41,8 @@ export default function MessagePrompt(props:IMessagePrompt) {
           }
         }
         type="text" onKeyDown={keyPressed}/>
-        <Button onClick={submitInput}>Send</Button>
-      </InputGroup>
+        <button className="bg-dark border-light" onClick={submitInput}>Send</button>
+      </div>
     </>
   )
 }

@@ -1,4 +1,3 @@
-import React from 'react'
 import { ListGroup, ListGroupItem } from 'react-bootstrap'
 
 type Props = {
@@ -7,13 +6,13 @@ type Props = {
 
 export default function OnlineUsersPanel({users}: Props) {
   return (
-    <div className="mt-4">
+    <div className="card-dark">
       <ListGroup>
         {
           users.map((user)=>{
             if(user.username != ""){
               return (
-                <ListGroupItem>{user.username}</ListGroupItem>
+                <ListGroupItem className="border-light" style={{color:user.color}}>{user.username}</ListGroupItem>
               )
             }
           })

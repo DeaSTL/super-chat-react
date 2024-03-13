@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button, FormControl, FormText, InputGroup, Modal, ModalBody, ModalTitle } from 'react-bootstrap'
 
 interface IGreetingCard {
   show:boolean,
@@ -18,19 +17,22 @@ export default function GreetingCard({setUsername,show}:IGreetingCard) {
       save()
     }
   }
-
+  
+  
   return (
-    <Modal show={show}>
-      <ModalTitle  className="px-4">
-        Choose your username!
-      </ModalTitle>
-      <ModalBody className="px-4">
-      <FormText>Username</FormText>
-      <InputGroup>
-        <FormControl type="text" onKeyDown={onKey} onChange={(e)=>{setInput(e.target.value)}}/>
-        <Button onClick={save}>Save</Button>
-      </InputGroup>
-      </ModalBody>
-    </Modal>
+    <div className={show ? 'modal' : 'modal invisible'}>
+      <div className="modal-body">
+        <p className="pl-2">
+          Choose your username!
+        </p>
+        <div>
+          <div className="pl-2">Username</div>
+          <div>
+            <input type="text" onKeyDown={onKey} onChange={(e)=>{setInput(e.target.value)}}/>
+            <button onClick={save}>Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

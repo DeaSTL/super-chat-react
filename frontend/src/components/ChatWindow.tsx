@@ -10,10 +10,12 @@ interface IChatWindow{
 export default function ChatWindow(props:IChatWindow) {
   return (
     <>
-      <Card style={
+      <div
+      className="card-light"
+      style={
           {
           height:"80vh",
-          overflow:"scroll",
+          overflowX:"scroll",
           scrollBehavior:"smooth",
           scrollMarginTop:"80vh",
           flexDirection:"column-reverse"
@@ -26,7 +28,7 @@ export default function ChatWindow(props:IChatWindow) {
             })
           }
         </CardBody>
-      </Card>
+      </div>
     </>
   )
 }

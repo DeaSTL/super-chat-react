@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-
+import './index.css'
+//import 'bootstrap/dist/css/bootstrap.min.css'
+//import './styles/custom.scss'
 import ChatWindow from './components/ChatWindow'
 import MessagePrompt from './components/MessagePrompt'
 import { Card } from 'react-bootstrap'
 import GreetingCard from './components/GreetingCard'
 import OnlineUsersPanel from './components/OnlineUsersPanel'
+import UsersDropdown from './components/UsersDropdown'
 
 type Message = {
   type: string;
@@ -57,6 +60,7 @@ function App() {
   },[ws])
 
   useEffect(() => {
+    <div>UsersDropdown</div>
     sendSocketMessage(username,"set_username")
   }, [username])
   
@@ -108,21 +112,19 @@ function App() {
   },[])
 
   return (
-    <div className="container-fluid mt-4">
+    <div className="flex flex-wrap">
       <GreetingCard setUsername={setUsername} show={username == ""}/>
-      <div className="row align-items-start">
-        <div className="col-2">
+        <div className="w-2/12 p-2">
           <OnlineUsersPanel users={users}/>
         </div>
-        <div className="col-md">
-          <Card className="p-4">
-            <span>Username: <strong>{username}</strong></span>
+        <div className="w-10/12 p-2">
+          <div className="card-dark">
+            <UsersDropdown current_user={user} users={users}/>
             <ChatWindow user={user} messages={messages}/>
             <MessagePrompt sendUserMessage={sendUserMessage}/>
-          </Card>
+          </div>
         </div>
       </div>
-    </div>
   )
 }
 

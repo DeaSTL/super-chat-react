@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gorilla/websocket"
+	"jmhart.dev/super-chat/utils"
 )
 
 func GenB64(length int) string {
@@ -41,15 +42,18 @@ type Message struct {
 type UserMessage struct {
 	Content string `json:"content"`
 	Name    string `json:"name"`
+	Color   string `json:"color"`
 	UserID  string `json:"user_id"`
 }
 
-type UserData struct {
-	UserID string `json:"user_id"`
-}
+// type UserData struct {
+// 	UserID string `json:"user_id"`
+// }
 
 type PublicUserData struct {
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
+	Color    string `json:"color"`
 }
 
 type ConnectionContext struct {
@@ -57,6 +61,7 @@ type ConnectionContext struct {
 	Client     *websocket.Conn
 	RoomID     string
 	Username   string
+	Color      string
 	SessionID  string
 	Closed     bool
 }
@@ -80,6 +85,7 @@ func (ctx *ConnectionContext) GetAllPublicUsers() []PublicUserData {
 func (ctx *ConnectionContext) GetPublicData() PublicUserData {
 	return PublicUserData{
 		Username: ctx.Username,
+		Color:    ctx.Color,
 	}
 }
 
@@ -88,6 +94,7 @@ func (ctx *ConnectionContext) New(connections *[]*ConnectionContext, client *web
 	ctx.Client = client
 	ctx.RoomID = ""
 	ctx.SessionID = GenB64(32)
+	ctx.Color = utils.GenerateRandomHexColor()
 }
 
 func (ctx *ConnectionContext) broadcastMessage(message any, event string) error {
@@ -136,6 +143,7 @@ func (ctx *ConnectionContext) messageHandler(message *Message) error {
 		err := json.Unmarshal(message.Data, &new_message)
 
 		new_message.UserID = ctx.SessionID
+		new_message.Color = ctx.Color
 
 		if err != nil {
 			return fmt.Errorf("Couldn't unmarshall message: %v", err)
@@ -144,7 +152,7 @@ func (ctx *ConnectionContext) messageHandler(message *Message) error {
 		ctx.broadcastMessage(new_message, "user_message")
 		break
 	case "get_user":
-		user_data := UserData{
+		user_data := PublicUserData{
 			UserID: ctx.SessionID,
 		}
 		ctx.sendMessage(user_data, "user_data")
@@ -162,6 +170,12 @@ func (ctx *ConnectionContext) messageHandler(message *Message) error {
 		public_users := ctx.GetAllPublicUsers()
 
 		err = ctx.broadcastMessage(public_users, "update_user_list")
+
+		user_data := PublicUserData{
+			UserID:   ctx.SessionID,
+			Username: ctx.Username,
+		}
+		ctx.sendMessage(user_data, "user_data")
 
 		if err != nil {
 			return err
