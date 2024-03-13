@@ -71,7 +71,7 @@ function App() {
     const hostname:string = "localhost"
 
 
-    const socket = new WebSocket(`ws://${hostname}:8080`)
+    const socket = new WebSocket(`ws://${hostname}:8080/ws`)
 
     socket.onopen = () => {
       console.log("Connected to websocket!")

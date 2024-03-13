@@ -1,9 +1,20 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 )
+
+func GenB64(length int) string {
+	dembytes := make([]byte, length)
+	_, err := rand.Read(dembytes)
+	if err != nil {
+		return ""
+	}
+	encoded := base64.URLEncoding.EncodeToString(dembytes)
+	return encoded
+}
 
 func HSVToRGB(h, s, v float64) (r, g, b uint8) {
 	var i int

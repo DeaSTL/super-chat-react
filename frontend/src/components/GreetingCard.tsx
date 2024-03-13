@@ -27,7 +27,7 @@ export default function GreetingCard({setUsername,show}:IGreetingCard) {
         </p>
         <div>
           <div className="pl-2">Username</div>
-          <div>
+          <div className="flex">
             <input type="text" onKeyDown={onKey} onChange={(e)=>{setInput(e.target.value)}}/>
             <button onClick={save}>Save</button>
           </div>

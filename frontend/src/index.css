@@ -16,10 +16,10 @@
     @apply max-w-full rounded overflow-hidden shadow-md p-4 bg-gray-600
   }
   .modal {
-    @apply absolute z-10 max-w-full max-h-full h-screen right-1/2 top-1/2 
+    @apply z-10 max-w-full max-h-full h-screen min-w-full bg-opacity-50 bg-gray-500 absolute
   } 
   .modal-body {
-    @apply inline-block align-bottom bg-white rounded-lg p-4 bg-gray-700 text-white
+    @apply inline-block align-top bg-white rounded-lg p-4 bg-gray-700 text-white absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20
   }
   body {
     @apply bg-gray-600
