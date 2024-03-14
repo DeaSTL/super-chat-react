@@ -4,19 +4,22 @@
 
 @layer components {
   input[type="text"] {
-    @apply p-2 m-2 rounded bg-gray-600 border-2 border-gray-600 text-gray-200 w-full
+    @apply p-2 m-2 rounded bg-gray-600 border-2 border-gray-600 text-gray-200
+  }
+  .label {
+    @apply pl-2 text-gray-200 text-sm
   }
   button{
-    @apply p-2 m-2 rounded bg-gray-600 text-white
+    @apply p-2 m-2 rounded bg-gray-600 text-white hover:bg-gray-400 duration-75
   }
   .card-dark {
-    @apply max-w-full rounded overflow-hidden shadow-md p-4 bg-gray-700
+    @apply rounded overflow-hidden shadow-md p-4 bg-gray-700
   }
   .card-light {
-    @apply max-w-full rounded overflow-hidden shadow-md p-4 bg-gray-600
+    @apply rounded overflow-hidden shadow-md p-4 bg-gray-600
   }
   .modal {
-    @apply z-10 max-w-full max-h-full h-screen min-w-full bg-opacity-50 bg-gray-500 absolute
+    @apply z-20 max-w-full max-h-full h-screen min-w-full bg-opacity-50 bg-gray-500 absolute
   } 
   .modal-body {
     @apply inline-block align-top bg-white rounded-lg p-4 bg-gray-700 text-white absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20

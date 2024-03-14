@@ -11,4 +11,10 @@ type UserData = {
   user_id: string,
   username?: string,
   color?: string
+  room_id?: string,
+}
+
+type Room = {
+  id?: string,
+  name: string,
 }

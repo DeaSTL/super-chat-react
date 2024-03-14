@@ -11,13 +11,21 @@ export default function UsersDropdown({current_user,users}: Props) {
 
   const [show, setShow] = useState(false)
 
-  const filtered_users = useMemo(()=>users?.filter((u)=>u?.username),[users])
+
+  function filterUser(user:UserData){
+    return user.username != undefined && user.room_id == current_user?.room_id
+  }
+
+  const filtered_users = useMemo(
+  ()=>{
+    return users?.filter(filterUser)
+  },[users])
 
   return (
     <div className="flex flex-col">
       <button
         onClick={()=>{setShow(!show)}}
-        className="font-bold text-gray-300 mr-auto">
+        className="font-bold text-gray-300 mr-auto duration-75 hover:bg-gray-500">
         <FontAwesomeIcon icon={faCaretDown} className={show ? '-rotate-90' : ''}/>
         <span className="ml-2">
           Username: 
@@ -31,8 +39,8 @@ export default function UsersDropdown({current_user,users}: Props) {
         <div className={show ? 'w-1/2 visible absolute bg-gray-700 p-4 rounded-b text-gray-200' : 'hidden'}>
           <ul className="grid grid-cols-2">
             {
-            filtered_users?.map((user)=>{
-              return (<li style={{color:user.color}}>{user.username}</li>)
+            filtered_users?.map((user,key)=>{
+              return (<li key={key} style={{color:user.color}}>{user.username}</li>)
             })
             }
           </ul>

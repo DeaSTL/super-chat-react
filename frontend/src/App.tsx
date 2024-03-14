@@ -1,22 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import './App.css'
 import './index.css'
 //import 'bootstrap/dist/css/bootstrap.min.css'
 //import './styles/custom.scss'
 import ChatWindow from './components/ChatWindow'
 import MessagePrompt from './components/MessagePrompt'
-import { Card } from 'react-bootstrap'
 import GreetingCard from './components/GreetingCard'
-import OnlineUsersPanel from './components/OnlineUsersPanel'
 import UsersDropdown from './components/UsersDropdown'
+import RoomsList from './components/RoomsList'
 
 type Message = {
   type: string;
   data: any;
 }
-
-
-
 
 
 
@@ -29,7 +25,10 @@ function App() {
   const [username, setUsername] = useState("")
 
   const [users, setUsers] = useState<UserData[]>([])
+
+  const [rooms, setRooms] = useState<Room[]>([])
   const [ws,setWs] = useState<WebSocket | null>(null)
+
 
 
   const sendSocketMessage = (data:any,type:string) => {
@@ -55,8 +54,21 @@ function App() {
     sendSocketMessage(new_user_message,"user_message")
   }
 
+  const newRoom = (name:string) => {
+    let new_room:Room = {
+      name:name
+    }
+    sendSocketMessage(new_room,"new_room")
+  }
+
+  const setRoom = (room_id:string) =>{ 
+    sendSocketMessage(room_id,"set_room")
+    setMessages([])
+  }
+  
+
   useEffect(()=>{
-      sendSocketMessage({},"get_user")
+      sendSocketMessage({},"init")
   },[ws])
 
   useEffect(() => {
@@ -66,12 +78,10 @@ function App() {
   
   useEffect(()=>{
 
-    //const hostname:string = "a634903d1a4b94f9cbae1ca502b27bf5-1875044850.us-east-2.elb.amazonaws.com"
-
     const hostname:string = "localhost"
 
-
-    const socket = new WebSocket(`ws://${hostname}:8080/ws`)
+    const connection_string:string = `ws://${hostname}:8080/ws`
+    const socket = new WebSocket(connection_string)
 
     socket.onopen = () => {
       console.log("Connected to websocket!")
@@ -96,6 +106,12 @@ function App() {
           let users: UserData[] = socket_message.data
           setUsers(users)
           return
+        case "room_list":
+          let rooms_list: Room[] = socket_message.data
+
+          console.log("room list",rooms_list,socket_message.data)
+          setRooms(rooms_list)
+          return
         default:
           return
       }
@@ -104,6 +120,10 @@ function App() {
     socket.onerror = (error) => {
       console.log(`websocket error: `, error)
     };
+
+    socket.onclose = () => { 
+      console.log('web socket closed')
+    }
 
     return () => {
         socket.close()
@@ -115,7 +135,7 @@ function App() {
     <div className="flex flex-wrap">
       <GreetingCard setUsername={setUsername} show={username == ""}/>
         <div className="w-2/12 p-2">
-          <OnlineUsersPanel users={users}/>
+          <RoomsList rooms={rooms} current_user={user} setRoom={setRoom} newRoom={newRoom}/>
         </div>
         <div className="w-10/12 p-2">
           <div className="card-dark">

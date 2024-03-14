@@ -126,54 +126,6 @@ func (ss *SocketServer) messageHandler(ctx *ConnectionContext, message *Message)
 
 		}
 	}
-	// 	switch message.Type {
-	// 	// echos message to all connected users
-	// 	case "user_message":
-	//
-	// 		new_message := UserMessage{}
-	//
-	// 		err := json.Unmarshal(message.Data, &new_message)
-	//
-	// 		new_message.UserID = ctx.SessionID
-	// 		new_message.Color = ctx.Color
-	//
-	// 		if err != nil {
-	// 			return fmt.Errorf("Couldn't unmarshall message: %v", err)
-	// 		}
-	//
-	// 		ctx.broadcastMessage(new_message, "user_message")
-	// 		break
-	// 	case "get_user":
-	// 		user_data := PublicUserData{
-	// 			UserID: ctx.SessionID,
-	// 		}
-	// 		ctx.sendMessage(user_data, "user_data")
-	// 		break
-	// 	case "set_username":
-	// 		new_username := ""
-	// 		err := json.Unmarshal(message.Data, &new_username)
-	// 		if err != nil {
-	// 			return fmt.Errorf("Error setting username: %v", err)
-	// 		}
-	// 		ctx.Username = new_username
-	//
-	// 		log.Printf("Username: %v", ctx.Username)
-	//
-	// 		public_users := ctx.GetAllPublicUsers()
-	//
-	// 		err = ctx.broadcastMessage(public_users, "update_user_list")
-	//
-	// 		user_data := PublicUserData{
-	// 			UserID:   ctx.SessionID,
-	// 			Username: ctx.Username,
-	// 		}
-	// 		ctx.sendMessage(user_data, "user_data")
-	//
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		break
-	// 	}
 	return nil
 }
 
@@ -188,9 +140,9 @@ func (ss *SocketServer) newConnection(conn *websocket.Conn) ConnectionContext {
 	return new_ctx
 }
 
-func (ss *SocketServer) BroadcastMessage(event string, message any) error {
+func (ss *SocketServer) Broadcast(event string, message any) error {
 	for _, conn := range *ss.Connections {
-		err := conn.SendMessage(event, message)
+		err := conn.Send(event, message)
 
 		if err != nil {
 			log.Printf("Error broadcasting: %v", err)
@@ -205,7 +157,7 @@ func (ss *SocketServer) Listen(event string, listener func(*ConnectionContext, *
 	ss.listeners[event] = Listener{Callback: listener}
 }
 
-func (ctx *ConnectionContext) SendMessage(event string, message any) error {
+func (ctx *ConnectionContext) Send(event string, message any) error {
 
 	new_message := Message{
 		Type: event,
@@ -226,4 +178,18 @@ func (ctx *ConnectionContext) SendMessage(event string, message any) error {
 
 	log.Printf("Broadcasting message: %v to: %v", message, ctx.SessionID)
 	return nil
+}
+
+func (ss *SocketServer) SendFilter(event string, message any, check func(*ConnectionContext) bool) {
+	for _, conn := range *ss.Connections {
+		if check(conn) {
+			err := conn.Send(event, message)
+
+			if err != nil {
+				log.Printf("Error broadcasting: %v", err)
+			}
+
+			log.Printf("Sending filtered message: %v to: %v", message, conn.SessionID)
+		}
+	}
 }

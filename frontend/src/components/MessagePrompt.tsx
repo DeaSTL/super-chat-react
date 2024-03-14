@@ -31,7 +31,7 @@ export default function MessagePrompt(props:IMessagePrompt) {
       </p>
       <div className="flex">
         <input
-        className=""
+        className="w-full"
         value={input}
         onChange={
           e => { 
@@ -41,7 +41,7 @@ export default function MessagePrompt(props:IMessagePrompt) {
           }
         }
         type="text" onKeyDown={keyPressed}/>
-        <button className="bg-dark border-light" onClick={submitInput}>Send</button>
+        <button className="m-2 bg-dark border-light" onClick={submitInput}>Send</button>
       </div>
     </>
   )
