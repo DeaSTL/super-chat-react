@@ -61,7 +61,7 @@ resource "aws_key_pair" "super_chat" {
 
 resource "aws_instance" "super-chat-instance" {
   ami = var.ami
-  instance_type = "t2.nano"
+  instance_type = "t2.micro"
   key_name = aws_key_pair.super_chat.key_name
   tags = {
     Name = var.name

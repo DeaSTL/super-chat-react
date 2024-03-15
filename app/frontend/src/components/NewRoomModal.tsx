@@ -8,20 +8,35 @@ type Props = {
 
 export default function NewRoomModal({}: Props) {
   const show = useStore($new_room_modal)
-  const [input, setInput] = useState<string>()
+  const [input, setInput] = useState<string>("")
+  const max_len = 24
+  const min_len = 1
 
   const submit = ()=>{
-    newRoom({name:input??""});
-    closeNewRoomModal()
+    if(input.length < max_len + 1 && input.length > min_len){
+      newRoom({name:input??""});
+      closeNewRoomModal()
+      setInput("")
+    }
+  }
+
+  const onChange = (e:any) => {
+    setInput(e.target.value)
+  }
+
+  const onKeydown = (e:any) => {
+    if(e.key == "Enter"){
+      submit()
+    }
   }
 
   return (
     <Modal show={show}>
-      <div className="label">
-        <label htmlFor="room-name">Room Name:</label>
-      </div>
-      <input onChange={(e)=>{setInput(e.target.value)}} id="room-name" type="text"/>
+      <input maxLength={max_len} minLength={min_len} placeholder="Room name" onKeyDown={onKeydown} onChange={onChange} value={input} id="room-name" type="text"/>
       <button onClick={submit}>Submit</button>
+      <div className="label">
+        {input.length} / {max_len}
+      </div>
     </Modal>
   )
 }

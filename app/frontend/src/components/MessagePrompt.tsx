@@ -12,8 +12,10 @@ export default function MessagePrompt() {
   
 
   const submitInput = () => {
-    sendSocketMessage("user_message",{name:user.username,content:input.valueOf()})
-    setInput("")
+    if(input != "" && input.length < 500 + 1){
+      sendSocketMessage("user_message",{name:user.username,content:input.valueOf()})
+      setInput("")
+    }
   }
 
 
@@ -32,11 +34,10 @@ export default function MessagePrompt() {
         <input
         className="w-full"
         value={input}
+        maxLength={maxlength}
         onChange={
           e => { 
-            if(e.target.value.length - 1 < maxlength){
-              setInput(e.target.value)
-            }
+            setInput(e.target.value)
           }
         }
         type="text" onKeyDown={keyPressed}/>

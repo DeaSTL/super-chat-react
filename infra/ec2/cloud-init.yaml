@@ -28,8 +28,7 @@ write_files:
       apt-get install docker.io
       systemctl docker start 
       usermod -a -G docker ubuntu
-      docker run -d jhartway99/super-chat-frontend:latest
-      docker run -d jhartway99/super-chat-server:latest
+      docker run --restart=always --network=host -d jhartway99/super-chat-server:latest
 
   - path: /etc/systemd/system/sc.service 
     content: |
