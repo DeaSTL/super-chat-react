@@ -18,3 +18,10 @@ type Room = {
   id?: string,
   name: string,
 }
+
+
+
+type SocketMessage = {
+  type: string;
+  data: any;
+}

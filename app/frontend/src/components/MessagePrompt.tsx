@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react'
+import {useState } from 'react'
+import { $user, sendSocketMessage } from '../store/Server'
+import { useStore } from '@nanostores/react'
 
 
-interface IMessagePrompt {
-  sendUserMessage: (text:string) => void
-}
-
-export default function MessagePrompt(props:IMessagePrompt) {
+export default function MessagePrompt() {
 
   const [input, setInput] = useState("")
+  const user = useStore($user)
 
   const maxlength = 500
   
 
   const submitInput = () => {
-    props.sendUserMessage(input.valueOf())
+    sendSocketMessage("user_message",{name:user.username,content:input.valueOf()})
     setInput("")
   }
 

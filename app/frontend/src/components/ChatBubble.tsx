@@ -1,10 +1,9 @@
 
-interface IMessage {
+type Props = {
   message_data: UserMessage
-  current_user: UserData
 }
 
-export default function ChatBubble({message_data,current_user}:IMessage) {
+export default function ChatBubble({message_data}:Props) {
 
   return (
     <div className="w-75">

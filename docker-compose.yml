@@ -2,23 +2,14 @@ version: "3"
 
 
 services:
-  server:
-    build: ./server/
+  app:
+    build: ./app/
     network_mode: "host"
+    image: jhartway99/super-chat-server
     develop:
       watch:
         - action: sync+restart
-          path: ./server
-          target: /app
-  frontend:
-    build: ./frontend/
-    network_mode: "host"
-    depends_on: 
-      - server
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
+          path: ./app
           target: /app
 
 

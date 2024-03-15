@@ -5,26 +5,34 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"jmhart.dev/super-chat/connection"
 	"jmhart.dev/super-chat/utils"
 )
 
 type UserMessage struct {
-	Content string `json:"content"`
-	Name    string `json:"name"`
-	Color   string `json:"color"`
-	UserID  string `json:"user_id"`
+	Content   string    `json:"content"`
+	Name      string    `json:"name"`
+	Color     string    `json:"color"`
+	UserID    string    `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Room struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string        `json:"id"`
+	Name     string        `json:"name"`
+	Messages []UserMessage `json:"messages"`
 }
 
 func (r *Room) New() {
 	r.ID = utils.GenB64(32)
+	r.Messages = []UserMessage{}
+}
+func (r *Room) AddMessage(new_message *UserMessage) {
+	r.Messages = append(r.Messages, *new_message)
 }
 
 type UserData struct {
@@ -59,7 +67,13 @@ func pushUpdateUserList(ctx *connection.ConnectionContext) error {
 
 func main() {
 
-	log.Printf("Starting chat server")
+	port := os.Getenv("SERVER_PORT")
+
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Attempting to start super-chat server on port " + port)
 
 	mux := http.NewServeMux()
 
@@ -120,13 +134,6 @@ func main() {
 				log.Println(err)
 				return
 			}
-			for i := 0; i < 150; i++ {
-				ctx.Send("user_message", UserMessage{
-					Content: "Some content",
-					Name:    "deez",
-					Color:   utils.GenerateRandomHexColor(),
-				})
-			}
 
 		})
 	Server.Listen("set_room",
@@ -140,6 +147,11 @@ func main() {
 			Users[ctx.SessionID].RoomID = room_id
 
 			ctx.Send("user_data", Users[ctx.SessionID])
+
+			messages := Rooms[Users[ctx.SessionID].RoomID].Messages
+
+			ctx.Send("messages", messages)
+
 			pushUpdateUserList(ctx)
 		})
 	Server.Listen("new_room",
@@ -175,9 +187,10 @@ func main() {
 				log.Print(err)
 				return
 			}
-
+			new_message.CreatedAt = time.Now()
 			new_message.UserID = Users[ctx.SessionID].UserID
 			new_message.Color = Users[ctx.SessionID].Color
+			Rooms[Users[ctx.SessionID].RoomID].AddMessage(&new_message)
 			// sends message to user with matching room id
 			Server.SendFilter("user_message", new_message, func(check_ctx *connection.ConnectionContext) bool {
 				return Users[check_ctx.SessionID].RoomID == Users[ctx.SessionID].RoomID
@@ -202,13 +215,25 @@ func main() {
 				log.Println(err)
 				return
 			}
+
+			messages := Rooms[Users[ctx.SessionID].RoomID].Messages
+
+			ctx.Send("messages", messages)
 		})
 
-	Server.Start(mux, "/ws")
+	frontend_dir := "./frontend/dist/"
+
+	file_server := http.FileServer(http.Dir(frontend_dir))
 
 	mux.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte("good"))
 	}))
-	http.ListenAndServe("0.0.0.0:8080", mux)
+
+	Server.Start(mux, "/ws")
+
+	mux.Handle("/", file_server)
+
+	log.Printf("Server starting on port " + port)
+	http.ListenAndServe(":"+port, mux)
 }

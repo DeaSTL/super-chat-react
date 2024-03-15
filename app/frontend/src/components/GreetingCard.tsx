@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import { $set_username_modal,closeNewUserModal, setUsername} from '../store/Server'
+import { useStore } from '@nanostores/react'
 
-interface IGreetingCard {
-  show:boolean,
-  setUsername:(username:string) => void
-}
 
-export default function GreetingCard({setUsername,show}:IGreetingCard) {
+export default function GreetingCard() {
+
+  const show = useStore($set_username_modal)
   
   const [input, setInput] = useState("")
   const save = () => {
-    setUsername(input) 
+    setUsername(input)
+    closeNewUserModal()
   }
 
   const onKey = (e:any) => {

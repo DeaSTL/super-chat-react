@@ -1,15 +1,22 @@
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import { useMemo, useState } from "react"
+import { $user, $user_list } from "../store/Server"
+import { useStore } from "@nanostores/react"
 
-type Props = {
-  users?:UserData[],
-  current_user?:UserData,
-}
+// type Props = {
+//   users?:UserData[],
+//   current_user?:UserData,
+// }
 
-export default function UsersDropdown({current_user,users}: Props) {
+export default function UsersDropdown() {
+
+  const current_user = useStore($user)
+  const users = useStore($user_list)
 
   const [show, setShow] = useState(false)
+
+
 
 
   function filterUser(user:UserData){
@@ -17,9 +24,9 @@ export default function UsersDropdown({current_user,users}: Props) {
   }
 
   const filtered_users = useMemo(
-  ()=>{
-    return users?.filter(filterUser)
-  },[users])
+    ()=>{
+      return users?.filter(filterUser)
+    },[users])
 
   return (
     <div className="flex flex-col">
