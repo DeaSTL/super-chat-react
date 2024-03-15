@@ -24,7 +24,6 @@ To get Super Chat up and running on your local machine for development and testi
 ### Prerequisites
 
 - Docker
-- Docker Compose
 
 ### Running the Application
 
